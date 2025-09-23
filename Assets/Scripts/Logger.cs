@@ -2,14 +2,28 @@ using UnityEngine;
 using System.Collections.Concurrent;
 
 public class Logger : MonoBehaviour {
-    private static readonly ConcurrentQueue<string> _logQueue = new();
-    private static readonly ConcurrentQueue<string> _errorQueue = new();
+    public static Logger Instance {
+        get
+        {
+            if (_instance == null)
+            {
+                GameObject obj = new GameObject("Logger");
+                _instance = obj.AddComponent<Logger>();
+                DontDestroyOnLoad(obj);
+            }
+            return _instance;
+        }
+    }
+    private static Logger _instance = null;
 
-    public static void Log(string message) {
+    private readonly ConcurrentQueue<string> _logQueue = new();
+    private readonly ConcurrentQueue<string> _errorQueue = new();
+
+    public void Log(string message) {
         _logQueue.Enqueue(message);
     }
 
-    public static void LogError(string message) {
+    public void LogError(string message) {
         _errorQueue.Enqueue(message);
     }
 
