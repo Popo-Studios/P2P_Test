@@ -22,7 +22,6 @@ public class P2PClient : INetEventListener
     private List<RTCIceCandidate> _remoteIceCandidates = new();
     private bool _readyDescription = false;
     private string _clientId;
-    private Action<IEnumerator> _runner;
 
     private readonly RTCIceServer[] _iceServers = new[]
     {
@@ -31,10 +30,9 @@ public class P2PClient : INetEventListener
         }
     };
 
-    public P2PClient(string serverUrl, string clientId, Action<IEnumerator> runner)
+    public P2PClient(string serverUrl, string clientId)
     {
         _clientId = clientId;
-        _runner = runner;
         _signaling = new WebSocket(serverUrl);
         SetupSignaling();
         SetupNetManager();
@@ -125,25 +123,32 @@ public class P2PClient : INetEventListener
 
     private void OnSignalingMessage(object sender, MessageEventArgs e)
     {
-        var message = JsonConvert.DeserializeObject<SignalingMessage>(e.Data);
-
-        switch (message.type)
+        try
         {
-            case "offer":
-                _runner(HandleOffer(message));
-                break;
-            case "answer":
-                _runner(HandleAnswer(message));
-                break;
-            case "ice-candidate":
-                HandleIceCandidate(message);
-                break;
-            case "peer-list":
-                HandlePeerList(message);
-                break;
-            case "udp-info":
-                HandleUdpInfo(message);
-                break;
+            var message = JsonConvert.DeserializeObject<SignalingMessage>(e.Data);
+
+            switch (message.type)
+            {
+                case "offer":
+                    CoroutineRunner.Instance.Run(HandleOffer(message));
+                    break;
+                case "answer":
+                    CoroutineRunner.Instance.Run(HandleAnswer(message));
+                    break;
+                case "ice-candidate":
+                    HandleIceCandidate(message);
+                    break;
+                case "peer-list":
+                    HandlePeerList(message);
+                    break;
+                case "udp-info":
+                    HandleUdpInfo(message);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError(ex.Message);
         }
     }
 
@@ -405,16 +410,11 @@ public class NetClient : MonoBehaviour
 
     }
 
-    public void Run(IEnumerator coroutine)
-    {
-        StartCoroutine(coroutine);
-    }
-
     public void Connect()
     {
         var clientId = id.text;
 
-        client = new P2PClient("ws://localhost:8080", clientId, Run);
+        client = new P2PClient("ws://localhost:8080", clientId);
 
         client.Connect();
 
