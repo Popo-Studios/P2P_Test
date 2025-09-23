@@ -43,12 +43,12 @@ public class P2PClient : INetEventListener
         _signaling.OnMessage += OnSignalingMessage;
         _signaling.OnOpen += (sender, e) =>
         {
-            Debug.Log("시그널링 서버에 연결됨");
+            Logger.Log("시그널링 서버에 연결됨");
             Register();
         };
         _signaling.OnError += (sender, e) =>
         {
-            Debug.Log($"시그널링 오류: {e.Message}");
+            Logger.Log($"시그널링 오류: {e.Message}");
         };
     }
 
@@ -78,7 +78,7 @@ public class P2PClient : INetEventListener
             type = offerDesc.type.ToString().ToLower()
         });
 
-        Debug.Log($"Calling {peerId}...");
+        Logger.Log($"Calling {peerId}...");
     }
 
     private void SetupPeerConnection()
@@ -89,14 +89,14 @@ public class P2PClient : INetEventListener
         };
 
         _peerConnection = new RTCPeerConnection(ref config);
-        Debug.Log("PeerConnection 생성됨");
+        Logger.Log("PeerConnection 생성됨");
 
         // ICE candidate 이벤트 처리
         _peerConnection.OnIceCandidate += (candidate) =>
         {
             if (candidate != null)
             {
-                Debug.Log($"Local ICE Candidate: {candidate.Candidate}");
+                Logger.Log($"Local ICE Candidate: {candidate.Candidate}");
                 _iceCandidates.Add(candidate);
 
                 // 원격 피어에게 ICE candidate 전송
@@ -111,7 +111,7 @@ public class P2PClient : INetEventListener
 
         _peerConnection.OnIceConnectionChange += (state) =>
         {
-            Debug.Log($"ICE Connection State: {state}");
+            Logger.Log($"ICE Connection State: {state}");
 
             if (state == RTCIceConnectionState.Completed)
             {
@@ -148,7 +148,7 @@ public class P2PClient : INetEventListener
         }
         catch (Exception ex)
         {
-            Debug.LogError(ex.Message);
+            Logger.LogError(ex.Message);
         }
     }
 
@@ -156,7 +156,7 @@ public class P2PClient : INetEventListener
     {
         SetupPeerConnection();
 
-        _ = new Timer(_ => Debug.Log(_peerConnection.IceConnectionState), null, 0, 1000);
+        _ = new Timer(_ => Logger.Log(_peerConnection.IceConnectionState.ToString()), null, 0, 1000);
 
         var offer = new RTCSessionDescription
         {
@@ -175,7 +175,7 @@ public class P2PClient : INetEventListener
         {
             foreach (var c in _remoteIceCandidates)
             {
-                Debug.Log($"Remote ICE Candidate: {c.Candidate}");
+                Logger.Log($"Remote ICE Candidate: {c.Candidate}");
                 _peerConnection.AddIceCandidate(c);
             }
             _remoteIceCandidates.Clear();
@@ -204,7 +204,7 @@ public class P2PClient : INetEventListener
         {
             foreach (var c in _remoteIceCandidates)
             {
-                Debug.Log($"Remote ICE Candidate: {c.Candidate}");
+                Logger.Log($"Remote ICE Candidate: {c.Candidate}");
                 _peerConnection.AddIceCandidate(c);
             }
             _remoteIceCandidates.Clear();
@@ -225,23 +225,23 @@ public class P2PClient : INetEventListener
         if (!_readyDescription)
         {
             _remoteIceCandidates.Add(candidate);
-            Debug.Log($"Queued Remote ICE Candidate: {candidate.Candidate}");
+            Logger.Log($"Queued Remote ICE Candidate: {candidate.Candidate}");
         }
         else
         {
             _peerConnection.AddIceCandidate(candidate);
 
-            Debug.Log($"Remote ICE Candidate: {candidate.Candidate}");
+            Logger.Log($"Remote ICE Candidate: {candidate.Candidate}");
         }
     }
 
     private void HandlePeerList(SignalingMessage message)
     {
         var peers = message.data.GetValue("peers").Values();
-        Debug.Log("사용 가능한 피어:");
+        Logger.Log("사용 가능한 피어:");
         foreach (var peer in peers)
         {
-            Debug.Log($"- {peer.Value<string>()}");
+            Logger.Log($"- {peer.Value<string>()}");
         }
     }
 
@@ -254,7 +254,7 @@ public class P2PClient : INetEventListener
 
         // UDP 연결 시도
         _netManager.Connect(ip, port, "p2p-connection");
-        Debug.Log($"UDP 연결 시도: {endpoint}");
+        Logger.Log($"UDP 연결 시도: {endpoint}");
     }
 
     private void StartUdpHolePunching()
@@ -304,7 +304,7 @@ public class P2PClient : INetEventListener
     // LiteNetLib 이벤트 처리
     public void OnPeerConnected(NetPeer peer)
     {
-        Debug.Log($"UDP 피어 연결됨: {peer}");
+        Logger.Log($"UDP 피어 연결됨: {peer}");
         _remotePeer = peer;
 
         // 테스트 메시지 전송
@@ -313,18 +313,18 @@ public class P2PClient : INetEventListener
 
     public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
     {
-        Debug.Log($"UDP 피어 연결 해제: {peer.Address}");
+        Logger.Log($"UDP 피어 연결 해제: {peer.Address}");
     }
 
     public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
     {
         var message = reader.GetString();
-        Debug.Log($"UDP 메시지 수신: {message}");
+        Logger.Log($"UDP 메시지 수신: {message}");
     }
 
     public void OnNetworkError(IPEndPoint endPoint, System.Net.Sockets.SocketError socketError)
     {
-        Debug.Log($"UDP 네트워크 에러: {socketError} at {endPoint}");
+        Logger.Log($"UDP 네트워크 에러: {socketError} at {endPoint}");
     }
 
     public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
@@ -345,7 +345,7 @@ public class P2PClient : INetEventListener
 
     public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
     {
-        Debug.Log($"지연시간 업데이트: {latency}ms");
+        Logger.Log($"지연시간 업데이트: {latency}ms");
     }
 
     public void OnConnectionRequest(ConnectionRequest request)
