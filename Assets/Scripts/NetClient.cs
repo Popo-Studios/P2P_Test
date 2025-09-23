@@ -170,7 +170,7 @@ public class P2PClient : INetEventListener
         {
             foreach (var c in _remoteIceCandidates)
             {
-                Console.WriteLine($"Remote ICE Candidate: {c.Candidate}");
+                Debug.Log($"Remote ICE Candidate: {c.Candidate}");
                 _peerConnection.AddIceCandidate(c);
             }
             _remoteIceCandidates.Clear();
@@ -199,7 +199,7 @@ public class P2PClient : INetEventListener
         {
             foreach (var c in _remoteIceCandidates)
             {
-                Console.WriteLine($"Remote ICE Candidate: {c.Candidate}");
+                Debug.Log($"Remote ICE Candidate: {c.Candidate}");
                 _peerConnection.AddIceCandidate(c);
             }
             _remoteIceCandidates.Clear();
@@ -220,23 +220,23 @@ public class P2PClient : INetEventListener
         if (!_readyDescription)
         {
             _remoteIceCandidates.Add(candidate);
-            Console.WriteLine($"Queued Remote ICE Candidate: {candidate.Candidate}");
+            Debug.Log($"Queued Remote ICE Candidate: {candidate.Candidate}");
         }
         else
         {
             _peerConnection.AddIceCandidate(candidate);
 
-            Console.WriteLine($"Remote ICE Candidate: {candidate.Candidate}");
+            Debug.Log($"Remote ICE Candidate: {candidate.Candidate}");
         }
     }
 
     private void HandlePeerList(SignalingMessage message)
     {
         var peers = message.data.GetValue("peers").Values();
-        Console.WriteLine("사용 가능한 피어:");
+        Debug.Log("사용 가능한 피어:");
         foreach (var peer in peers)
         {
-            Console.WriteLine($"- {peer.Value<string>()}");
+            Debug.Log($"- {peer.Value<string>()}");
         }
     }
 
@@ -249,7 +249,7 @@ public class P2PClient : INetEventListener
 
         // UDP 연결 시도
         _netManager.Connect(ip, port, "p2p-connection");
-        Console.WriteLine($"UDP 연결 시도: {endpoint}");
+        Debug.Log($"UDP 연결 시도: {endpoint}");
     }
 
     private void StartUdpHolePunching()
